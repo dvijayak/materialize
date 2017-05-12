@@ -1,5 +1,5 @@
 /*!
- * Materialize v0.98.2 (http://materializecss.com)
+ * Materialize vundefined (http://materializecss.com)
  * Copyright 2014-2015 Materialize
  * MIT License (https://raw.githubusercontent.com/Dogfalo/materialize/master/LICENSE)
  */
@@ -1042,6 +1042,7 @@ if (jQuery) {
       }); // done return
     },
     open : function() {
+      methods.init.apply( this, arguments );
       $(this).trigger('openModal');
     },
     close : function() {
@@ -2136,7 +2137,7 @@ if (jQuery) {
             if (!(target instanceof SVGElement) && target.className.indexOf('waves-effect') !== -1) {
                 element = target;
                 break;
-            } else if (target.classList.contains('waves-effect')) {
+            } else if (target.className.indexOf('waves-effect') !== -1) {
                 element = target;
                 break;
             }
@@ -2428,7 +2429,9 @@ if (jQuery) {
         // if closeOnClick, then add close event for all a tags in side sideNav
         if (options.closeOnClick === true) {
           menu.on("click.itemclick", "a:not(.collapsible-header)", function(){
-            removeMenu();
+            if (!(window.innerWidth > 992 && menu.hasClass('fixed'))){
+              removeMenu();
+            }
           });
         }
 
@@ -2839,12 +2842,17 @@ if (jQuery) {
         offsetRight : number -> offset from right. Default: 0
         offsetBottom : number -> offset from bottom. Default: 0
         offsetLeft : number -> offset from left. Default: 0
+				activeClass : string -> Class name to be added to the active link. Default: active
 	 * @returns {jQuery}
 	 */
 	$.scrollSpy = function(selector, options) {
 	  var defaults = {
 			throttle: 100,
-			scrollOffset: 200 // offset - 200 allows elements near bottom of page to scroll
+			scrollOffset: 200, // offset - 200 allows elements near bottom of page to scroll
+			activeClass: 'active',
+			getActiveElement: function(id) {
+				return 'a[href=#' + id + ']';
+			}
     };
     options = $.extend(defaults, options);
 
@@ -2891,7 +2899,7 @@ if (jQuery) {
 			var $this = $(this);
 
 			if (visible[0]) {
-				$('a[href="#' + visible[0].attr('id') + '"]').removeClass('active');
+				$(options.getActiveElement(visible[0].attr('id'))).removeClass(options.activeClass);
 				if ($this.data('scrollSpy:id') < visible[0].data('scrollSpy:id')) {
 					visible.unshift($(this));
 				}
@@ -2904,7 +2912,7 @@ if (jQuery) {
 			}
 
 
-			$('a[href="#' + visible[0].attr('id') + '"]').addClass('active');
+			$(options.getActiveElement(visible[0].attr('id'))).addClass(options.activeClass);
 		});
 		selector.on('scrollSpy:exit', function() {
 			visible = $.grep(visible, function(value) {
@@ -2912,13 +2920,13 @@ if (jQuery) {
 	    });
 
 			if (visible[0]) {
-				$('a[href="#' + visible[0].attr('id') + '"]').removeClass('active');
+				$(options.getActiveElement(visible[0].attr('id'))).removeClass(options.activeClass);
 				var $this = $(this);
 				visible = $.grep(visible, function(value) {
 	        return value.attr('id') != $this.attr('id');
 	      });
 	      if (visible[0]) { // Check if empty
-					$('a[href="#' + visible[0].attr('id') + '"]').addClass('active');
+					$(options.getActiveElement(visible[0].attr('id'))).addClass(options.activeClass);
 	      }
 			}
 		});
@@ -3086,9 +3094,14 @@ if (jQuery) {
       if (fontFamily) { hiddenDiv.css('font-family', fontFamily); }
       if (lineHeight) { hiddenDiv.css('line-height', lineHeight); }
 
-      if ($textarea.attr('wrap') === "off") {
-        hiddenDiv.css('overflow-wrap', "normal")
-                 .css('white-space', "pre");
+      // Set original-height, if none
+      if (!$textarea.data('original-height')) {
+        $textarea.data('original-height', $textarea.height());
+      }
+
+      if ($textarea.attr('wrap') === 'off') {
+        hiddenDiv.css('overflow-wrap', 'normal')
+                 .css('white-space', 'pre');
       }
 
       hiddenDiv.text($textarea.val() + '\n');
@@ -3106,21 +3119,22 @@ if (jQuery) {
         hiddenDiv.css('width', $(window).width()/2);
       }
 
+
       /**
        * Resize if the new height is greater than the
        * original height of the textarea
        */
-      if ($textarea.data("original-height") <= hiddenDiv.height()) {
+      if ($textarea.data('original-height') <= hiddenDiv.height()) {
         $textarea.css('height', hiddenDiv.height());
-      } else if ($textarea.val().length < $textarea.data("previous-length")) {
+      } else if ($textarea.val().length < $textarea.data('previous-length')) {
         /**
          * In case the new height is less than original height, it
          * means the textarea has less text than before
          * So we set the height to the original one
          */
-        $textarea.css('height', $textarea.data("original-height"));
+        $textarea.css('height', $textarea.data('original-height'));
       }
-      $textarea.data("previous-length", $textarea.val().length);
+      $textarea.data('previous-length', $textarea.val().length);
     }
 
     $(text_area_selector).each(function () {
@@ -3129,8 +3143,8 @@ if (jQuery) {
        * Instead of resizing textarea on document load,
        * store the original height and the original length
        */
-      $textarea.data("original-height", $textarea.height());
-      $textarea.data("previous-length", $textarea.val().length);
+      $textarea.data('original-height', $textarea.height());
+      $textarea.data('previous-length', $textarea.val().length);
     });
 
     $('body').on('keyup keydown autoresize', text_area_selector, function () {
@@ -4253,7 +4267,7 @@ if (jQuery) {
         $currChips.removeClass('focus');
 
         // Remove active if empty
-        if (!$currChips.data('chips').length) {
+        if ($currChips.data('chips') === undefined || !$currChips.data('chips').length) {
           $currChips.siblings('label').removeClass('active');
         }
         $currChips.siblings('.prefix').removeClass('active');
@@ -4312,7 +4326,7 @@ if (jQuery) {
       if (label.length) {
         label.attr('for', chipId);
 
-        if ($chips.data('chips').length) {
+        if ($chips.data('chips')!== undefined && $chips.data('chips').length) {
           label.addClass('active');
         }
       }
@@ -4339,15 +4353,18 @@ if (jQuery) {
 
       var $renderedChip = $('<div class="chip"></div>');
       $renderedChip.text(elem.tag);
+      if (elem.image) {
+        $renderedChip.prepend($('<img />').attr('src', elem.image))
+      }
       $renderedChip.append($('<i class="material-icons close">close</i>'));
       return $renderedChip;
     };
 
     this.setPlaceholder = function($chips) {
-      if ($chips.data('chips').length && curr_options.placeholder) {
+      if ($chips.data('chips') !== undefined && $chips.data('chips').length && curr_options.placeholder) {
         $chips.find('input').prop('placeholder', curr_options.placeholder);
 
-      } else if (!$chips.data('chips').length && curr_options.secondaryPlaceholder) {
+      } else if (($chips.data('chips') === undefined || !$chips.data('chips').length) && curr_options.secondaryPlaceholder) {
         $chips.find('input').prop('placeholder', curr_options.secondaryPlaceholder);
       }
     };

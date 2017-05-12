@@ -24,3 +24,6 @@ bower_components
 css/ghpages-materialize.css
 bin/materialize.js
 bin/materialize.css
+
+# Ignore build result files
+bin/
